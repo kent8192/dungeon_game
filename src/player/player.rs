@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::fs::{self, File};
+use std::fs;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Player {
     //名前
@@ -23,6 +23,40 @@ pub struct Player {
 }
 
 impl Player {
+    /// プレイヤーを作成
+    /// * `<_name>` - <プレイヤー名>
+    /// * `<_condition>` - <状態異常>
+    /// * `<_hp>` - <体力>
+    /// * `<_mp>` - <魔力>
+    /// * `<_atk>` - <攻撃力>
+    /// * `<_def>` - <防御力>
+    /// * `<_luk>` - <幸運値>
+    /// * `<lv>` - <レベル>
+    /// * `<exp>` - <経験値>
+    pub fn instantiate(
+        _name: &str,
+        _condition: u16,
+        _hp: u32,
+        _mp: u32,
+        _atk: u32,
+        _def: u32,
+        _luk: u32,
+        _lv: u32,
+        _exp: u32,
+    ) -> Player {
+        let player = Player {
+            name: String::from(_name),
+            condition: _condition,
+            hp: _hp,
+            mp: _mp,
+            atk: _atk,
+            def: _def,
+            luk: _luk,
+            lv: _lv,
+            exp: _exp,
+        };
+        return player;
+    }
     /// プレイヤーを作成&ファイルに記録
     /// * `<_datapath>` - <セーブデータファイルのパス>
     /// * `<_name>` - <プレイヤー名>
@@ -64,19 +98,92 @@ impl Player {
     ///プレイヤーをJSONファイルから作成
     /// * `<path>` - <JSOファイルのパス>
     pub fn from_json_file(path: &str) -> Player {
-        let f = fs::read_to_string(path).expect("File not found");
-        let player: Player = serde_json::from_str(&f).expect("convert filed");
+        let json = fs::read_to_string(path).expect("File not found");
+        let player: Player = serde_json::from_str(&json).expect("convert filed");
         return player;
     }
-}
 
-enum StatusCondition {
+    /// プレイヤー名を取得
+    pub fn get_name(&self) -> String {
+        let val = &self.name;
+        return val.to_string();
+    }
+    /// プレイヤーの状態を取得
+    pub fn get_condition(&self) -> &u16 {
+        let val = &self.condition;
+        return val;
+    }
+
+    /// 状態異常(単数)を付与
+    pub fn attach_condition(&mut self, cond: StatusCondition) {
+        self.condition |= cond as u16;
+    }
+    /// 状態異常(複数)を付与
+    pub fn attach_condition_vec(&mut self, conds: Vec<StatusCondition>) {
+        for i in 0..conds.len() {
+            self.condition |= conds[i] as u16;
+        }
+    }
+
+    /// 状態異常(単数)を回復
+    pub fn remove_status_effect(&mut self, cond: StatusCondition) {
+        self.condition &= !(cond as u16);
+    }
+    /// 状態異常(複数)を回復
+    pub fn remove_status_effect_vec(&mut self, conds: Vec<StatusCondition>) {
+        for i in 0..conds.len() {
+            self.condition &= !(conds[i] as u16);
+        }
+    }
+
+    /// 状態異常(単数)か確認
+    pub fn is_status_effect(&self, cond: StatusCondition) -> bool {
+        let judge = self.condition & (cond as u16);
+        return judge == (cond as u16);
+    }
+
+    /// 状態異常(複数)か確認
+    pub fn is_status_effect_vec(&self, conds: Vec<StatusCondition>) -> Vec<bool> {
+        let mut array: Vec<bool> = vec![];
+        for i in 0..conds.len() {
+            let judge = self.condition & (conds[i] as u16);
+            array.push(judge == (conds[i] as u16));
+        }
+        return array;
+    }
+
+    /// 状態異常(単数)か確認
+    /// TODO:PlayerのインスタンスがなんのStatusConditionを持っているかStatusConditionを返す
+    pub fn get_status_effect(&self) -> StatusCondition {
+        return StatusCondition::NoParticular;
+    }
+
+    /// 状態異常(複数)か確認
+    /// TODO:PlayerのインスタンスがなんのStatusConditionを持っているかVec<StatusCondition>を返す
+    pub fn get_status_effect_vec(&self) -> Vec<StatusCondition> {
+        let mut array: Vec<StatusCondition> = vec![];
+        return array;
+    }
+}
+/// 状態異常
+#[derive(Clone, Copy, Debug)]
+pub enum StatusCondition {
+    /// 毒
     Poisoned = 0b1,
+    /// 麻痺
     Paralyzed = 0b10,
+    /// 混乱
     Confused = 0b100,
+    /// 気絶
     Stunned = 0b1000,
+    /// 凍結
     Frozen = 0b10000,
+    /// やけど
     Burning = 0b100000,
+    /// 死亡
     Dead = 0b1000000,
+    /// 魅了
     Charmed = 0b10000000,
+    /// 異常なし
+    NoParticular = 0b100000000,
 }
