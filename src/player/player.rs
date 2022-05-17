@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Player {
     //名前
@@ -115,59 +117,54 @@ impl Player {
     }
 
     /// 状態異常(単数)を付与
-    pub fn attach_condition(&mut self, cond: StatusCondition) {
+    pub fn attach_status_effect(&mut self, cond: StatusEffect) {
         self.condition |= cond as u16;
     }
     /// 状態異常(複数)を付与
-    pub fn attach_condition_vec(&mut self, conds: Vec<StatusCondition>) {
+    pub fn attach_status_effect_list(&mut self, conds: Vec<StatusEffect>) {
         for i in 0..conds.len() {
             self.condition |= conds[i] as u16;
         }
     }
 
     /// 状態異常(単数)を回復
-    pub fn remove_status_effect(&mut self, cond: StatusCondition) {
+    pub fn remove_status_effect(&mut self, cond: StatusEffect) {
         self.condition &= !(cond as u16);
     }
     /// 状態異常(複数)を回復
-    pub fn remove_status_effect_vec(&mut self, conds: Vec<StatusCondition>) {
+    pub fn remove_status_effect_vec(&mut self, conds: Vec<StatusEffect>) {
         for i in 0..conds.len() {
             self.condition &= !(conds[i] as u16);
         }
     }
 
     /// 状態異常(単数)か確認
-    pub fn is_status_effect(&self, cond: StatusCondition) -> bool {
+    pub fn is_status_effect(&self, cond: StatusEffect) -> bool {
         let judge = self.condition & (cond as u16);
-        return judge == (cond as u16);
+        return judge == cond as u16;
     }
 
     /// 状態異常(複数)か確認
-    pub fn is_status_effect_vec(&self, conds: Vec<StatusCondition>) -> Vec<bool> {
+    pub fn is_status_effect_vec(&self, conds: Vec<StatusEffect>) -> Vec<bool> {
         let mut array: Vec<bool> = vec![];
-        for i in 0..conds.len() {
-            let judge = self.condition & (conds[i] as u16);
-            array.push(judge == (conds[i] as u16));
+        for cond in conds {
+            let judge = self.condition & cond as u16;
+            array.push(judge == (cond as u16));
         }
         return array;
     }
 
-    /// 状態異常(単数)か確認
-    /// TODO:PlayerのインスタンスがなんのStatusConditionを持っているかStatusConditionを返す
-    pub fn get_status_effect(&self) -> StatusCondition {
-        return StatusCondition::NoParticular;
-    }
-
-    /// 状態異常(複数)か確認
+    /// なんの状態異常か確認
     /// TODO:PlayerのインスタンスがなんのStatusConditionを持っているかVec<StatusCondition>を返す
-    pub fn get_status_effect_vec(&self) -> Vec<StatusCondition> {
-        let mut array: Vec<StatusCondition> = vec![];
+    pub fn get_status_effect_list(&self) -> Vec<StatusEffect> {
+        let checker = StatusEffect::iter();
+        let array: Vec<StatusEffect> = checker.filter(|e| self.is_status_effect(*e)).collect();
         return array;
     }
 }
 /// 状態異常
-#[derive(Clone, Copy, Debug)]
-pub enum StatusCondition {
+#[derive(Clone, Copy, Debug, EnumIter)]
+pub enum StatusEffect {
     /// 毒
     Poisoned = 0b1,
     /// 麻痺
