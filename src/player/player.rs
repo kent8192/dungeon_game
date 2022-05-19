@@ -1,5 +1,6 @@
+use num::FromPrimitive;
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{collections::HashMap, fs};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,7 +24,6 @@ pub struct Player {
     //経験値
     exp: u32,
 }
-
 impl Player {
     /// プレイヤーを作成
     /// * `<_name>` - <プレイヤー名>
@@ -110,60 +110,19 @@ impl Player {
         let val = &self.name;
         return val.to_string();
     }
-    /// プレイヤーの状態を取得
-    pub fn get_condition(&self) -> &u16 {
+    /// プレイヤーの状態(mut)を取得
+    pub fn get_mut_condition(&mut self) -> &mut u16 {
+        let val = &mut self.condition;
+        return val;
+    }
+    /// プレイヤーの状態(imut)を取得
+    pub fn get_imut_condition(&self) -> &u16 {
         let val = &self.condition;
         return val;
     }
-
-    /// 状態異常(単数)を付与
-    pub fn attach_status_effect(&mut self, cond: StatusEffect) {
-        self.condition |= cond as u16;
-    }
-    /// 状態異常(複数)を付与
-    pub fn attach_status_effect_list(&mut self, conds: Vec<StatusEffect>) {
-        for i in 0..conds.len() {
-            self.condition |= conds[i] as u16;
-        }
-    }
-
-    /// 状態異常(単数)を回復
-    pub fn remove_status_effect(&mut self, cond: StatusEffect) {
-        self.condition &= !(cond as u16);
-    }
-    /// 状態異常(複数)を回復
-    pub fn remove_status_effect_vec(&mut self, conds: Vec<StatusEffect>) {
-        for i in 0..conds.len() {
-            self.condition &= !(conds[i] as u16);
-        }
-    }
-
-    /// 状態異常(単数)か確認
-    pub fn is_status_effect(&self, cond: StatusEffect) -> bool {
-        let judge = self.condition & (cond as u16);
-        return judge == cond as u16;
-    }
-
-    /// 状態異常(複数)か確認
-    pub fn is_status_effect_vec(&self, conds: Vec<StatusEffect>) -> Vec<bool> {
-        let mut array: Vec<bool> = vec![];
-        for cond in conds {
-            let judge = self.condition & cond as u16;
-            array.push(judge == (cond as u16));
-        }
-        return array;
-    }
-
-    /// なんの状態異常か確認
-    /// TODO:PlayerのインスタンスがなんのStatusConditionを持っているかVec<StatusCondition>を返す
-    pub fn get_status_effect_list(&self) -> Vec<StatusEffect> {
-        let checker = StatusEffect::iter();
-        let array: Vec<StatusEffect> = checker.filter(|e| self.is_status_effect(*e)).collect();
-        return array;
-    }
 }
 /// 状態異常
-#[derive(Clone, Copy, Debug, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumIter, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum StatusEffect {
     /// 毒
     Poisoned = 0b1,
@@ -183,4 +142,92 @@ pub enum StatusEffect {
     Charmed = 0b10000000,
     /// 異常なし
     NoParticular = 0b100000000,
+}
+impl FromPrimitive for StatusEffect {
+    fn from_u16(n: u16) -> Option<Self> {
+        let checker = StatusEffect::iter();
+        let result: Vec<StatusEffect> = checker.filter(|e| *e as u16 == n).collect();
+        if result.len() == 1 {
+            return Option::Some(result[0]);
+        } else {
+            return Option::None;
+        }
+    }
+    fn from_i64(n: i64) -> Option<Self> {
+        let checker = StatusEffect::iter();
+        let result: Vec<StatusEffect> = checker.filter(|e| *e as u16 == n as u16).collect();
+        if result.len() == 1 {
+            return Option::Some(result[0]);
+        } else {
+            return Option::None;
+        }
+    }
+    fn from_u64(n: u64) -> Option<Self> {
+        let checker = StatusEffect::iter();
+        let result: Vec<StatusEffect> = checker.filter(|e| *e as u16 == n as u16).collect();
+        if result.len() == 1 {
+            return Option::Some(result[0]);
+        } else {
+            return Option::None;
+        }
+    }
+}
+/// TODO:StatusEffectのimplを実装
+impl StatusEffect {
+    /// 状態異常(単数)を付与
+    /// TODO:割と動くか自信ないのでデバッグ
+    pub fn attach_status_effect(target: &mut u16, cond: StatusEffect) {
+        *target |= cond as u16;
+    }
+    /// 状態異常(複数)を付与
+    /// TODO:割と動くか自信ないのでデバッグ
+    pub fn attach_status_effect_list(target: &u16, conds: Vec<StatusEffect>) {
+        for cond in conds {
+            StatusEffect::attach_status_effect(&mut target, cond);
+        }
+    }
+
+    /// 状態異常(単数)を回復
+    /// TODO:割と動くか自信ないのでデバッグ
+    pub fn remove_status_effect(target: &mut u16, cond: StatusEffect) {
+        *target &= !(cond as u16);
+    }
+    /// 状態異常(複数)を回復
+    /// TODO:割と動くか自信ないのでデバッグ
+    pub fn remove_status_effect_vec(target: &mut u16, conds: Vec<StatusEffect>) {
+        for cond in conds {
+            StatusEffect::remove_status_effect(&mut target, cond);
+        }
+    }
+
+    /// 状態異常(単数)か確認
+    /// TODO:割と動くか自信ないのでデバッグ
+    pub fn is_status_effect(target: &u16, cond: StatusEffect) -> bool {
+        let judge = target & (cond as u16);
+        return judge == cond as u16;
+    }
+
+    /// 状態異常(複数)か確認
+    /// TODO:割と動くか自信ないのでデバッグ
+    pub fn is_status_effect_vec(
+        target: &u16,
+        conds: Vec<StatusEffect>,
+    ) -> HashMap<StatusEffect, bool> {
+        let mut map: HashMap<StatusEffect, bool> = HashMap::new();
+        for cond in conds {
+            let judge = target & cond as u16;
+            map.insert(cond, judge == (cond as u16));
+        }
+        return map;
+    }
+
+    /// なんの状態異常か確認
+    /// TODO:割と動くか自信ないのでデバッグ
+    pub fn get_status_effect_list(target: &u16) -> Vec<StatusEffect> {
+        let checker = StatusEffect::iter();
+        let array: Vec<StatusEffect> = checker
+            .filter(|e| StatusEffect::is_status_effect(target, *e))
+            .collect();
+        return array;
+    }
 }
