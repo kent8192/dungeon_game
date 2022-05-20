@@ -172,57 +172,51 @@ impl FromPrimitive for StatusEffect {
         }
     }
 }
+
 /// TODO:StatusEffectのimplを実装
 impl StatusEffect {
     /// 状態異常(単数)を付与
-    /// TODO:割と動くか自信ないのでデバッグ
     pub fn attach_status_effect(target: &mut u16, cond: StatusEffect) {
         *target |= cond as u16;
     }
     /// 状態異常(複数)を付与
-    /// TODO:割と動くか自信ないのでデバッグ
-    pub fn attach_status_effect_list(target: &u16, conds: Vec<StatusEffect>) {
+    pub fn attach_status_effect_list(target: &mut u16, conds: Vec<StatusEffect>) {
         for cond in conds {
-            StatusEffect::attach_status_effect(&mut target, cond);
+            StatusEffect::attach_status_effect(target, cond);
         }
     }
 
     /// 状態異常(単数)を回復
-    /// TODO:割と動くか自信ないのでデバッグ
     pub fn remove_status_effect(target: &mut u16, cond: StatusEffect) {
         *target &= !(cond as u16);
     }
     /// 状態異常(複数)を回復
-    /// TODO:割と動くか自信ないのでデバッグ
-    pub fn remove_status_effect_vec(target: &mut u16, conds: Vec<StatusEffect>) {
+    pub fn remove_status_effect_list(target: &mut u16, conds: Vec<StatusEffect>) {
         for cond in conds {
-            StatusEffect::remove_status_effect(&mut target, cond);
+            StatusEffect::remove_status_effect(target, cond);
         }
     }
 
     /// 状態異常(単数)か確認
-    /// TODO:割と動くか自信ないのでデバッグ
     pub fn is_status_effect(target: &u16, cond: StatusEffect) -> bool {
         let judge = target & (cond as u16);
         return judge == cond as u16;
     }
 
     /// 状態異常(複数)か確認
-    /// TODO:割と動くか自信ないのでデバッグ
-    pub fn is_status_effect_vec(
+    pub fn is_status_effect_list(
         target: &u16,
         conds: Vec<StatusEffect>,
     ) -> HashMap<StatusEffect, bool> {
         let mut map: HashMap<StatusEffect, bool> = HashMap::new();
         for cond in conds {
-            let judge = target & cond as u16;
-            map.insert(cond, judge == (cond as u16));
+            let judge = StatusEffect::is_status_effect(target, cond);
+            map.insert(cond, judge);
         }
         return map;
     }
 
     /// なんの状態異常か確認
-    /// TODO:割と動くか自信ないのでデバッグ
     pub fn get_status_effect_list(target: &u16) -> Vec<StatusEffect> {
         let checker = StatusEffect::iter();
         let array: Vec<StatusEffect> = checker
