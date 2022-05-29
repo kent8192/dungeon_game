@@ -1,8 +1,5 @@
 #[derive(Serialize, Deserialize, Debug)]
 pub struct dungeon {
-    //階数
-    deepness: u32,
+    ///フロアの配列
+    floors: [floor],
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Floor {}

@@ -173,7 +173,6 @@ impl FromPrimitive for StatusEffect {
     }
 }
 
-/// TODO:StatusEffectのimplを実装
 impl StatusEffect {
     /// 状態異常(単数)を付与
     pub fn attach_status_effect(target: &mut u16, cond: StatusEffect) {
