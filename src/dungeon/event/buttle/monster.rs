@@ -1,6 +1,7 @@
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Monster {
     //ID
-    id: &str,
+    id: String,
     //名前
     name: String,
     //状態異常
