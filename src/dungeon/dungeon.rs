@@ -1,5 +1,8 @@
+use super::floor::Floor;
+use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize, Debug)]
-pub struct dungeon {
+pub struct Dungeon {
     ///フロアの配列
-    floors: [floor],
+    floors: Vec<Floor>,
 }
