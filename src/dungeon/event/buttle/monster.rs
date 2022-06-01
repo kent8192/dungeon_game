@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Monster {
     //ID
@@ -21,7 +23,7 @@ pub struct Monster {
     //経験値
     exp: u32,
 }
-impl monster {
+impl Monster {
     /// プレイヤーを作成
     /// * `<_name>` - <プレイヤー名>
     /// * `<_condition>` - <状態異常>
@@ -33,7 +35,7 @@ impl monster {
     /// * `<lv>` - <レベル>
     /// * `<exp>` - <経験値>
     pub fn instantiate(
-        _id: u32,
+        _id: String,
         _name: &str,
         _condition: u16,
         _hp: u32,
